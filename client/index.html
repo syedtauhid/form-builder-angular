@@ -1,0 +1,138 @@
+<!doctype html>
+<!--[if lt IE 8]>         <html class="no-js lt-ie8"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html ng-app="app" ng-controller="AppCtrl">
+<!--<![endif]-->
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Home</title>
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <!-- Needs images, font... therefore can not be part of main.css -->
+    <link href="https://fonts.googleapis.com/css?family=Titillium+Web" rel="stylesheet">
+    <link rel="stylesheet" href="bower_components/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="bower_components/material-design-iconic-font/dist/css/material-design-iconic-font.min.css">
+    <!-- end Needs images -->
+    <!-- build:css({.tmp,client}) styles/main.css -->
+    <link rel="stylesheet" href="bower_components/angular-material/angular-material.min.css">
+    <link rel="stylesheet" href="styles/bootstrap.min.css">
+    <link rel="stylesheet" href="styles/jquery.scrollbar.css">
+    <link rel="stylesheet" href="styles/main.css">
+    <link href="bower_components/angular-areas/css/angular-areas.css" media="screen" rel="stylesheet" type="text/css" />
+    <link href="bower_components/angular-carousel-3d/dist/carousel-3d.css" rel="stylesheet" type="text/css" />
+    <!-- endbuild -->
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+</head>
+
+<body id="app" class="fixed-header" ng-class="{
+'bg-master-lighter': is('app.extra.timeline'),
+'no-header': is('app.social') || is('app.calendar') || is('app.maps.vector') || is('app.maps.google'),
+'menu-pin' : app.layout.menuPin,
+'menu-behind' : app.layout.menuBehind
+ }">
+
+    <div class="full-height" ui-view></div>
+
+ <!-- build:js scripts/vendor.js -->
+    <script src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="bower_components/jquery-ui/jquery-ui.min.js"></script>
+    <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="bower_components/angular/angular.min.js"></script>
+
+    <script src="bower_components/angular-animate/angular-animate.min.js"></script>
+    <script src="bower_components/angular-touch/angular-touch.min.js"></script>
+
+    <script src="bower_components/angular-aria/angular-aria.min.js"></script>
+    <script src="bower_components/angular-messages/angular-messages.min.js"></script>
+    <script src="bower_components/angular-ui-router/release/angular-ui-router.min.js"></script>
+    <script src="bower_components/angular-sanitize/angular-sanitize.min.js"></script>
+    <script src="bower_components/angular-ui-sortable/sortable.min.js"></script>
+    <script src="bower_components/moment/moment.js"></script>
+    <script src="bower_components/chart.js/dist/Chart.min.js"></script>
+    <script src="bower_components/angular-chart.js/dist/angular-chart.min.js"></script>
+    <script src="bower_components/angular-file-saver/dist/angular-file-saver.bundle.min.js"></script>
+    <script src="bower_components/angular-youtube-mb/dist/angular-youtube-embed.min.js"></script>
+    <script src="bower_components/angular-areas/angular-areas.js"></script>
+
+    <script src="bower_components/angular-swipe/dist/angular-swipe.min.js"></script>
+    <script src="bower_components/angular-carousel-3d/dist/carousel-3d.min.js"></script>
+    <script src="bower_components/ng-csv/build/ng-csv.min.js"></script>
+    <script src='bower_components/ngInfiniteScroll/build/ng-infinite-scroll.min.js'></script>
+    <!-- endbuild -->
+    <!-- build:js scripts/ui.js -->
+
+    <script src="bower_components/angular-material/angular-material.min.js"></script>
+    <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+    <script src="bower_components/jquery.slimscroll/jquery.slimscroll.min.js"></script>
+    <script src="bower_components/angular-scroll/angular-scroll.min.js"></script>
+    <script src="bower_components/jquery-steps/build/jquery.steps.min.js"></script>
+    <script src="bower_components/angular-wizard/dist/angular-wizard.min.js"></script>
+    <script src="bower_components/angular-translate/angular-translate.min.js"></script>
+    <script src="bower_components/angular-translate-loader-static-files/angular-translate-loader-static-files.min.js"></script>
+    <script src="bower_components/ng-file-upload/ng-file-upload.js"></script>
+    <script src="bower_components/lodash/dist/lodash.min.js"></script>
+    <!-- endbuild -->
+    <!-- build:js scripts/app.js -->
+    <!-- inject:js -->
+
+   <script src="app/app.module.js"></script>
+
+   <script src="app/core/app.constant.js"></script>
+
+   <script src="app/core/app.controller.js"></script>
+
+   <script src="app/core/config.route.js"></script>
+
+   <script src="app/home/home.controller.js"></script>
+
+   <script src="app/common/directives/counter.diretive.js"></script>
+
+   <script src="app/common/directives/cs-select.js"></script>
+
+   <script src="app/common/directives/noImage.directive.js"></script>
+
+   <script src="app/common/directives/pg-dropdown.js"></script>
+
+   <script src="app/common/directives/pg-form-group.js"></script>
+
+   <script src="app/common/directives/pg-navigate.js"></script>
+
+   <script src="app/common/directives/pg-portlet.js"></script>
+
+   <script src="app/common/directives/pg-search.js"></script>
+
+   <script src="app/common/directives/pg-sidebar.js"></script>
+
+   <script src="app/common/directives/pg-tab.js"></script>
+
+   <script src="app/common/directives/skycons.js"></script>
+
+   <script src="app/common/services/fileUpload.service.js"></script>
+
+   <script src="vendors/echarts.js"></script>
+
+   <script src="vendors/ngecharts.js"></script>
+
+   <script src="vendors/pages.calendar.js"></script>
+
+   <script src="vendors/pages.calendar.min.js"></script>
+
+   <script src="vendors/pages.email.js"></script>
+
+   <script src="vendors/pages.js"></script>
+
+   <script src="vendors/pages.min.js"></script>
+
+   <script src="vendors/pages.social.js"></script>
+
+   <script src="vendors/pages.social.min.js"></script>
+
+   <!-- endinject -->
+    <!-- endbuild -->
+</body>
+
+</html>
