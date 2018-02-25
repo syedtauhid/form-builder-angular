@@ -28,14 +28,9 @@
     <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 
-<body id="app" class="fixed-header" ng-class="{
-'bg-master-lighter': is('app.extra.timeline'),
-'no-header': is('app.social') || is('app.calendar') || is('app.maps.vector') || is('app.maps.google'),
-'menu-pin' : app.layout.menuPin,
-'menu-behind' : app.layout.menuBehind
- }">
+<body>
 
-    <div class="full-height" ui-view></div>
+    <div class="container" ui-view></div>
 
  <!-- build:js scripts/vendor.js -->
     <script src="bower_components/jquery/dist/jquery.min.js"></script>
@@ -86,8 +81,6 @@
    <script src="app/core/app.controller.js"></script>
 
    <script src="app/core/config.route.js"></script>
-
-   <script src="app/home/home.controller.js"></script>
 
    <script src="app/common/directives/counter.diretive.js"></script>
 

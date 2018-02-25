@@ -1,38 +1,35 @@
-(function () {
-    'use strict';
+(function() {
+    "use strict";
 
-    angular.module('app')
-        .controller('AppCtrl', ['$scope','$state', AppCtrl]); // overall control
+    angular
+        .module("app")
+        .controller("AppCtrl", ["$scope", "$state", "$uibModal",'$log', AppCtrl]) // overall control
+        .controller('FormBuilderCtrl', ["$scope", "$uibModalInstance", '$log',  FormBuilderCtrl]);
 
-    function AppCtrl($scope, $state) {
-      // App globals
-      $scope.app = {
-        name: 'Pages',
-        description: 'Admin Dashboard UI kit',
-        layout: {
-            menuPin: false,
-            menuBehind: false,
-            theme: 'pages/css/pages.css'
-        },
-        author: 'Revox'
-      }
+    function AppCtrl($scope, $state, $uibModal, $log) {
+        $scope.openFormBuilder = openFormBuilder;
 
-      // Checks if the given state is the current state
-      $scope.is = function(name) {
-        return $state.is(name);
-      }
+        function openFormBuilder(inputJson) {
+            var modalInstance = $uibModal.open({
+                animation: true,
+                templateUrl: 'formBuilderTemplate.html',
+                controller: "FormBuilderCtrl",
+                size: "lg",
+                resolve: {
+                  inputJson: inputJson
+                }
+            });
 
-      // Checks if the given state/child states are present
-      $scope.includes = function(name) {
-        return $state.includes(name);
-      }
-
-      // Broadcasts a message to pgSearch directive to toggle search overlay
-      $scope.showSearchOverlay = function() {
-        $scope.$broadcast('toggleSearchOverlay', {
-            show: true
-        })
-      }
+            modalInstance.result.then(
+                function() {},
+                function() {
+                    $log.info("Modal dismissed at: " + new Date());
+                }
+            );
+        }
     }
 
+    function FormBuilderCtrl($scope, $uibModalInstance, $log, model) {
+
+    }
 })();
