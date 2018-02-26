@@ -6,15 +6,31 @@
 <button type="button" class="btn btn-primary" ng-disabled="!jsonInput" ng-click="openFormBuilder(jsonInput)">Edit in builder</button>
 <button type="button" class="btn btn-success" ng-click="openFormBuilder()">Open builder</button>
 
+
+<!-- Modal template -->
 <script type="text/ng-template" id="formBuilderTemplate.html">
     <div class="modal-header">
-        <h3 class="modal-title" id="modal-title">I'm a modal!</h3>
+        <h4 class="modal-title" id="modal-title">Drag and Drop form builder</h4>
     </div>
     <div class="modal-body" id="modal-body">
-        <ul>
-            
-        </ul>
-        
+        <div class="row">
+            <div class="col-md-2">
+                <ul>
+                    <li>
+                        option 1
+                    </li>
+                    <li>
+                        option 1
+                    </li>
+                </ul>
+            </div>
+            <div class="col-md-8">
+                <div class="upload-drop-zone" id="drop-zone">
+                    Just drag and drop files here
+                </div>
+            </div>
+            <div class="col-md-2"></div>
+        </div>
     </div>
     <div class="modal-footer">
         <button class="btn btn-primary" type="button" ng-click="ok()">OK</button>
