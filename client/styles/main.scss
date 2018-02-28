@@ -10,30 +10,70 @@
 // @import "layout/home";
 
 /* layout.css Style */
-.upload-drop-zone {
-  height: 200px;
-  border-width: 2px;
-  margin-bottom: 20px;
+
+ul {
+  list-style: none;
+  padding-left: 0px;
+}
+
+.input-fields {
+  li {
+    background: #FFF;
+    border: 1px solid #ccc;
+    padding: 2px 5px 2px 5px;
+    border-radius: 5px;
+    text-align: left;
+    cursor: move;
+  }
+}
+
+.dragable-layouts {
+  // margin-right: -14px;
+  padding-bottom: 15px;
+  // border: 1px solid #ccc;
+  border-top: 0px;
+  .bg-gray{
+    border: 1px solid #ccc;
+    min-height: 20px;
+  }
+}
+
+.propertyUl {
+  height: 290px;
+  overflow-y: scroll;
 }
 
 /* skin.css Style*/
 .upload-drop-zone {
-  color: #ccc;
-  border-style: dashed;
-  border-color: #ccc;
-  line-height: 200px;
-  text-align: center
-}
-.upload-drop-zone.drop {
-  color: #222;
-  border-color: #222;
+  min-height: 465px;
+  padding: 5px;
+  border-width: 2px;
+  margin-bottom: 20px;
+  border-style: dotted;
+  border-color: rgb(228, 226, 226);
 }
 
+.item-container {
+  display: grid;
+  margin: 10px 0px 10px 0px;
+  border: 1px solid #ccc;
+  padding: 8px;
+}
 
+.bg-white {
+  background: white;
+  border: 1px rgb(59, 56, 56);
+  border-radius: 2px;
+}
 
+.bg-default {
+  background: #ccc;
+}
 
-
-
+.bg-dark-black {
+  background: #333;
+  color: white;
+}
 
 
 /* MARGINS & PADDINGS */

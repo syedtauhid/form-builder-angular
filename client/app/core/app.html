@@ -10,30 +10,142 @@
 <!-- Modal template -->
 <script type="text/ng-template" id="formBuilderTemplate.html">
     <div class="modal-header">
-        <h4 class="modal-title" id="modal-title">Drag and Drop form builder</h4>
+        <h4 class="modal-title" id="modal-title" data-toggle="tooltip" data-placement="top" title="Hooray!">Drag and Drop form builder</h4>
     </div>
     <div class="modal-body" id="modal-body">
         <div class="row">
-            <div class="col-md-2">
+            <div class="col-md-2 input-fields">
                 <ul>
-                    <li>
-                        option 1
+                    <li data-type="address" draggable="true" ondragstart=" angular.element(this).scope().drag(event, this)">
+                        <i class="fa fa-adn"></i> address
                     </li>
-                    <li>
-                        option 1
+                    <li data-type="boolean" draggable="true" ondragstart=" angular.element(this).scope().drag(event, this)">
+                        <i class="fa fa-adn"></i> boolean
+                    </li>
+                    <li data-type="choice" draggable="true" ondragstart=" angular.element(this).scope().drag(event, this)">
+                        <i class="fa fa-adn"></i> choice
+                    </li>
+                    <li data-type="date" draggable="true" ondragstart=" angular.element(this).scope().drag(event, this)">
+                        <i class="fa fa-adn"></i> date
+                    </li>
+                    <li data-type="duration" draggable="true" ondragstart=" angular.element(this).scope().drag(event, this)">
+                        <i class="fa fa-adn"></i> duration
+                    </li>
+                    <li data-type="email" draggable="true" ondragstart=" angular.element(this).scope().drag(event, this)">
+                        <i class="fa fa-adn"></i> email
+                    </li>
+                    <li data-type="embedded" draggable="true" ondragstart=" angular.element(this).scope().drag(event, this)">
+                        <i class="fa fa-adn"></i> embedded
+                    </li>
+                    <li data-type="file" draggable="true" ondragstart=" angular.element(this).scope().drag(event, this)">
+                        <i class="fa fa-adn"></i> file
+                    </li>
+                    <li data-type="html" draggable="true" ondragstart=" angular.element(this).scope().drag(event, this)">
+                        <i class="fa fa-adn"></i> html
+                    </li>
+                    <li data-type="impacts" draggable="true" ondragstart=" angular.element(this).scope().drag(event, this)">
+                        <i class="fa fa-adn"></i> impacts
+                    </li>
+                    <li data-type="link" draggable="true" ondragstart=" angular.element(this).scope().drag(event, this)">
+                        <i class="fa fa-adn"></i> link
+                    </li>
+                    <li data-type="locale" draggable="true" ondragstart=" angular.element(this).scope().drag(event, this)">
+                        <i class="fa fa-adn"></i> locale
+                    </li>
+                    <li data-type="number" draggable="true" ondragstart=" angular.element(this).scope().drag(event, this)">
+                        <i class="fa fa-adn"></i> number
+                    </li>
+                    <li data-type="options" draggable="true" ondragstart=" angular.element(this).scope().drag(event, this)">
+                        <i class="fa fa-adn"></i> options
+                    </li>
+                    <li data-type="percent" draggable="true" ondragstart=" angular.element(this).scope().drag(event, this)">
+                        <i class="fa fa-adn"></i> percent
+                    </li>
+                    <li data-type="text" draggable="true" ondragstart=" angular.element(this).scope().drag(event, this)">
+                        <i class="fa fa-adn"></i> text
+                    </li>
+                    <li data-type="timezone" draggable="true" ondragstart=" angular.element(this).scope().drag(event, this)">
+                        <i class="fa fa-adn"></i> timezone
+                    </li>
+                    <li data-type="url" draggable="true" ondragstart=" angular.element(this).scope().drag(event, this)">
+                        <i class="fa fa-adn"></i> url
                     </li>
                 </ul>
             </div>
-            <div class="col-md-8">
-                <div class="upload-drop-zone" id="drop-zone">
-                    Just drag and drop files here
+            <div class="col-md-7">
+                <div class="upload-drop-zone" ondrop="angular.element(this).scope().drop(event)" ondragover="angular.element(this).scope().allowDrop(event,this)">
+                    <p class="text-center" ng-if="formItems.length == 0">Just drag and drop fields here</p>
+                    <ul ui-sortable ng-model="formItems">
+                        <li ng-repeat="item in formItems" data-index="{{item.property.index = $index}}">
+                            <div class="form-group bg-white" ng-if="!item.col">
+                                <h4 ng-if="item.property.header">{{item.property.header}}</h4>
+                                <span class="pull-right">
+                                    <button type="button" class="btn btn-warning btn-xs" ng-click="showProperty($index)">
+                                        <i class="fa fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-xs">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </span>
+                                <label for="{{item.html.inputId}}">{{item.property.label}}</label>
+                                <input type="{{item.html.inputType}}" class="form-control" id="{{item.html.inputId}}" placeholder="{{item.property.placeholder}}"
+                                    alt="item.property.helpText" aria-describedby="help-{{item.html.inputId}}" />
+                                <small id="help-{{item.html.inputId}}" class="form-text text-muted">{{item.property.description}}</small>
+                            </div>
+                            <div ng-if="item.col" class="item-container">
+                                <ul class="list-inline" ui-sortable ng-model="item">
+                                    <li ng-repeat="i in getNumber(item.col) track by $index" ng-class="{'col-md-6': item.col == 2, 'col-md-4': item.col == 3}">
+                                        <div ondrop="angular.element(this).scope().dropOnLayout(event)" ondragover="angular.element(this).scope().allowDrop(event,this)"
+                                            style="min-height:20px; background:#ccc;" class="col-md-12">
+                                            <p class="text-center" >Just drag and drop fields here</p>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
             </div>
-            <div class="col-md-2"></div>
+            <div class="col-md-3">
+                <div class="row dragable-layouts text-center">
+                    <p class="bg-dark-black">Dragable layouts</p>
+                    <div class="col-md-12" data-type="layout" data-cols="2" draggable="true" ondragstart=" angular.element(this).scope().drag(event, this)">
+                        <div class="col-md-6 bg-gray">1</div>
+                        <div class="col-md-6 bg-gray">2</div>
+                    </div>
+                    <div class="col-md-12 m-t-sm" data-type="layout" data-cols="3" draggable="true" ondragstart=" angular.element(this).scope().drag(event, this)">
+                        <div class="col-md-4 bg-gray">1</div>
+                        <div class="col-md-4 bg-gray">2</div>
+                        <div class="col-md-4 bg-gray">3</div>
+                    </div>
+                </div>
+                <div class="row input-properties">
+                    <p class="bg-dark-black text-center">Field properties</p>
+                    <ul class="propertyUl">
+                        <li ng-repeat="(key, val) in formItemProperty">
+                            <div class="form-group" ng-if="(isString(val) || isNumber(val)) && viewableProperty(key)">
+                                <label for="inputsm{{$index}}">{{key}}</label>
+                                <input class="form-control input-sm" value="{{val}}" ng-model="formItemProperty[key]" placeholder="{{key}}" id="inputsm{{$index}}"
+                                    type="text" ng-readonly="checkReadonlyProperty(key)">
+                            </div>
+                            <!-- <div class="input-group" ng-if="isString(val)">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default" type="button">{{key}}</button>
+                                </span>
+                                <input type="text" class="form-control" value="{{val}}" ng-model="formItemProperty[key]" placeholder="{{key}}">
+                            </div> -->
+                        </li>
+                    </ul>
+                    <button ng-if="formItemProperty" type="button" class="btn btn-default" ng-click="applyChangedProperty(currentIndex)">
+                        <i class="fa fa-check-circle"></i> Apply
+                    </button>
+                </div>
+            </div>
+
         </div>
     </div>
     <div class="modal-footer">
-        <button class="btn btn-primary" type="button" ng-click="ok()">OK</button>
-        <button class="btn btn-warning" type="button" ng-click="cancel()">Cancel</button>
+        <button class="btn btn-primary" type="button" ng-click="ok()">Export as JSON</button>
+        <button class="btn btn-default" type="button" ng-click="cancel()">Cancel</button>
     </div>
 </script>
