@@ -7,9 +7,10 @@
 <button type="button" class="btn btn-success" ng-click="openFormBuilder()">Open builder</button>
 
 
-<!-- Modal template -->
+<!-- Form builder Modal template -->
 <script type="text/ng-template" id="formBuilderTemplate.html">
     <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
         <h4 class="modal-title" id="modal-title" data-toggle="tooltip" data-placement="top" title="Hooray!">Drag and Drop form builder</h4>
     </div>
     <div class="modal-body" id="modal-body">
@@ -77,28 +78,50 @@
                     Just drag and drop fields here
                 </div>
                 <ul ui-sortable ng-model="formItems">
-                    <li ng-repeat="item in formItems" data-index="{{item.property.index = $index}}">
-                        <div class="form-group bg-white" ng-if="!item.col">
+                    <li ng-repeat="item in formItems">
+                        <div class="form-group bg-white" ng-if="!isArray(item)">
                             <h4 ng-if="item.property.header">{{item.property.header}}</h4>
                             <span class="pull-right">
-                                <button type="button" class="btn btn-warning btn-xs" ng-click="showProperty($index)">
+                                <button type="button" class="btn btn-default btn-xs" ng-class="{'btn-warning':hovering}" ng-mouseenter="hovering=true" ng-mouseleave="hovering=false"
+                                    ng-click="showProperty($index)">
                                     <i class="fa fa-edit"></i>
                                 </button>
-                                <button type="button" class="btn btn-danger btn-xs">
+                                <button type="button" class="btn btn-default btn-xs" ng-class="{'btn-danger':hovering}" ng-mouseenter="hovering=true" ng-mouseleave="hovering=false">
                                     <i class="fa fa-trash"></i>
                                 </button>
                             </span>
                             <label for="{{item.html.inputId}}">{{item.property.label}}</label>
                             <input type="{{item.html.inputType}}" class="form-control" id="{{item.html.inputId}}" placeholder="{{item.property.placeholder}}"
-                                alt="item.property.helpText" aria-describedby="help-{{item.html.inputId}}" />
+                                alt="item.property.helpText" aria-describedby="help-{{item.html.inputId}}" ng-readonly="!item.property.editable" data-index="{{item.property.index = $index}}"
+                            />
                             <small id="help-{{item.html.inputId}}" class="form-text text-muted">{{item.property.description}}</small>
                         </div>
-                        <div ng-if="item.col" class="item-container">
-                            <ul class="list-inline" ui-sortable ng-model="item">
-                                <li ng-repeat="i in getNumber(item.col) track by $index" ng-class="{'col-md-6': item.col == 2, 'col-md-4': item.col == 3}">
-                                    <div ondrop="angular.element(this).scope().dropOnLayout(event)" ondragover="angular.element(this).scope().allowDrop(event,this)"
-                                        style="min-height:20px; background:#ccc;" class="col-md-12">
-                                        <p class="text-center">Just drag and drop fields here</p>
+                        <div ng-if="isArray(item)" class="item-container">
+                            <span class="pull-right m-b-sm">
+                                <button type="button" class="btn btn-default btn-xs" ng-class="{'btn-danger':hovering}" ng-mouseenter="hovering=true" ng-mouseleave="hovering=false">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </span>
+                            <ul class="list-inline" ui-sortable ng-model="item" data-index="{{item.index = $index}}">
+                                <li ng-repeat="elem in item track by $index" ng-class="{'col-md-6': item.length == 2, 'col-md-4': item.length == 3}">
+                                    <div ondrop="angular.element(this).scope().dropOnLayout(event, this)" data-index="{{ item.index }}" data-position="{{$index}}"
+                                        ondragover="angular.element(this).scope().allowDrop(event,this)" class="dropZone">
+                                        <p class="text-center" ng-if="isEmptyObject(elem)">Just drag and drop fields here</p>
+                                        <div class="form-group bg-white" ng-if="!isEmptyObject(elem)">
+                                            <h4 ng-if="elem.property.header">{{elem.property.header}}</h4>
+                                            <span class="pull-right" ng-mouseenter="hovering=true" ng-mouseleave="hovering=false">
+                                                <button type="button" class="btn btn-default btn-xs" ng-class="{'btn-warning':hovering}" ng-click="showProperty(item.index, $index)">
+                                                    <i class="fa fa-edit"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-default btn-xs" ng-class="{'btn-danger':hovering}">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </span>
+                                            <label for="{{elem.html.inputId}}">{{elem.property.label}}</label>
+                                            <input type="{{elem.html.inputType}}" class="form-control" id="{{elem.html.inputId}}" placeholder="{{elem.property.placeholder}}"
+                                                alt="elem.property.helpText" aria-describedby="help-{{elem.html.inputId}}" />
+                                            <small id="help-{{elem.html.inputId}}" class="form-text text-muted">{{elem.property.description}}</small>
+                                        </div>
                                     </div>
                                 </li>
                             </ul>
@@ -126,7 +149,14 @@
                             <div class="form-group" ng-if="(isString(val) || isNumber(val)) && viewableProperty(key)">
                                 <label for="inputsm{{$index}}">{{key}}</label>
                                 <input class="form-control input-sm" value="{{val}}" ng-model="formItemProperty[key]" placeholder="{{key}}" id="inputsm{{$index}}"
-                                    type="text" ng-readonly="checkReadonlyProperty(key)">
+                                    type="text" ng-readonly="checkReadonlyProperty(key, val)">
+                            </div>
+                            <div class="form-group" ng-if="isBoolean(val)">
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" ng-model="formItemProperty[key]" ng-change="booleanPropertyChanged(key)"> {{getLabelForKey(key)}}
+                                    </label>
+                                </div>
                             </div>
                             <!-- <div class="input-group" ng-if="isString(val)">
                                 <span class="input-group-btn">
