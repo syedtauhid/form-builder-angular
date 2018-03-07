@@ -47,6 +47,7 @@
         $scope.multiValueTypes = prepareTypeNamesForMultiValues();
         $scope.itemProperties = prepareElemTypeProperties();
         $scope.countId = 0;
+        $scope.mapEntry = [];
         // Drag and drop
         $scope.allowDrop = function(ev, obj) {
             ev.preventDefault();
@@ -115,7 +116,8 @@
             var itemType = ev.dataTransfer.getData("type");
             var arrIndex = elem.getAttribute("data-index");
             var currentPosition = elem.getAttribute("data-position");
-            addTextItemToForm(itemType, arrIndex, currentPosition);
+            var cols = elem.getAttribute("data-cols");
+            addTextItemToForm(itemType, arrIndex, currentPosition, cols);
         }
 
         var getInputTypeFromType = function(type) {
@@ -143,6 +145,12 @@
             }
         }
 
+        $scope.addItemToOptions = function(elem) {
+            elem[$scope.mapEntry.key] = $scope.mapEntry.label;
+            $scope.mapEntry.key = "";
+            $scope.mapEntry.label = "";
+        }
+
         $scope.applyChangedProperty = function(index) {
             console.log($scope.formItemProperty);
         };
@@ -155,6 +163,7 @@
             map["file"] = "files";
             map["link"] = "links";
             map["text"] = "text_list";
+            map["option"] = "options";
             return map;
         }
 
@@ -189,7 +198,7 @@
             );
             properties["choice"] = defaultPropertyAsStr.insert(
                 insertPos,
-                ',"type": "choice", "choices": {}, "multiField": false'
+                ',"type": "choice", "multiField": false, "choices": {}'
             );
             properties["date"] = defaultPropertyAsStr.insert(
                 insertPos,
@@ -228,6 +237,10 @@
             properties["number"] = defaultPropertyAsStr.insert(
                 insertPos,
                 ',"type": "number", "minimum":1, "maximum": 11'
+            );
+            properties["options"] = defaultPropertyAsStr.insert(
+                insertPos,
+                ',"type": "option", "multiField": false, "options": {}'
             );
             properties["percent"] = defaultPropertyAsStr.insert(
                 insertPos,
@@ -288,13 +301,13 @@
             return angular.equals(item, {});
         };
 
+        $scope.isObject = function(item) {
+            return angular.isObject(item);
+        };
+
         $scope.getNumber = function(num) {
             console.log(num);
             return new Array(Number(num));
-        };
-
-        $scope.isObject = function(item) {
-            return angular.isObject(item);
         };
 
         $scope.viewableProperty = function(val) {

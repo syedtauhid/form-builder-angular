@@ -38,6 +38,13 @@ ul {
     }
 }
 
+span.input-multiple {
+    float: right;
+    margin-top: -32px;
+    margin-right: 1px;
+    padding: 9px;
+}
+
 .propertyUl {
     max-height: 290px;
     overflow-y: scroll;
@@ -80,6 +87,14 @@ ul {
         min-height:20px; 
         // background:#ccc;
     }
+}
+
+.add-img-button {
+    float: left;
+    color: #337ab7;
+    margin-top: 5px;
+    font-size: 25px;
+    cursor: pointer;
 }
 
 .bg-white {
