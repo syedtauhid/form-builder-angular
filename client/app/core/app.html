@@ -75,18 +75,19 @@
             </div>
             <div class="col-md-7">
                 <div class="upload-drop-zone" ondrop="angular.element(this).scope().drop(event)" ondragover="angular.element(this).scope().allowDrop(event,this)">
-                    Just drag and drop fields here
+                    Just drag and drop fields or layouts here
                 </div>
                 <ul ui-sortable ng-model="formItems">
                     <li ng-repeat="item in formItems">
                         <!-- for full-width items -->
-                        <div class="form-group bg-white" ng-if="!isArray(item)">
+                        <div class="form-group bg-white" ng-if="!isArray(item) && !item.property.schema">
                             <span class="pull-right">
                                 <button type="button" class="btn btn-default btn-xs" ng-class="{'btn-warning':hovering}" ng-mouseenter="hovering=true" ng-mouseleave="hovering=false"
                                     ng-click="showProperty($index)">
                                     <i class="fa fa-edit"></i>
                                 </button>
-                                <button type="button" class="btn btn-default btn-xs" ng-class="{'btn-danger':hovering}" ng-mouseenter="hovering=true" ng-mouseleave="hovering=false">
+                                <button type="button" ng-click="removeItem(formItems, $index)" class="btn btn-default btn-xs" ng-class="{'btn-danger':hovering}"
+                                    ng-mouseenter="hovering=true" ng-mouseleave="hovering=false">
                                     <i class="fa fa-trash"></i>
                                 </button>
                             </span>
@@ -122,7 +123,8 @@
                         <!-- For Layouts -->
                         <div ng-if="isArray(item)" class="item-container">
                             <span class="pull-right m-b-sm">
-                                <button type="button" class="btn btn-default btn-xs" ng-class="{'btn-danger':hovering}" ng-mouseenter="hovering=true" ng-mouseleave="hovering=false">
+                                <button type="button" ng-click="removeItem(formItems, $index)" class="btn btn-default btn-xs" ng-class="{'btn-danger':hovering}"
+                                    ng-mouseenter="hovering=true" ng-mouseleave="hovering=false">
                                     <i class="fa fa-trash"></i>
                                 </button>
                             </span>
@@ -137,14 +139,35 @@
                                                 <button type="button" class="btn btn-default btn-xs" ng-class="{'btn-warning':hovering}" ng-click="showProperty(item.index, $index)">
                                                     <i class="fa fa-edit"></i>
                                                 </button>
-                                                <button type="button" class="btn btn-default btn-xs" ng-class="{'btn-danger':hovering}">
+                                                <button type="button" ng-click="removeItem(item, $index)" class="btn btn-default btn-xs" ng-class="{'btn-danger':hovering}">
                                                     <i class="fa fa-trash"></i>
                                                 </button>
                                             </span>
                                             <h4 ng-if="elem.property.header">{{elem.property.header}}</h4>
                                             <label for="{{elem.html.inputId}}">{{elem.property.label}}</label>
-                                            <input type="{{elem.html.inputType}}" class="form-control" id="{{elem.html.inputId}}" placeholder="{{elem.property.placeholder}}"
-                                                alt="elem.property.helpText" aria-describedby="help-{{elem.html.inputId}}" />
+                                            <input type="{{elem.html.inputType}}" ng-if="!elem.property.choices && !elem.property.options" class="form-control" id="{{elem.html.inputId}}"
+                                                placeholder="{{elem.property.placeholder}}" alt="elem.property.helpText" aria-describedby="help-{{elem.html.inputId}}"
+                                            />
+                                            <!-- For select box -->
+                                            <div ng-if="elem.property.choices">
+                                                <select class="form-control" id="{{elem.html.inputId}}" ng-readonly="!elem.property.editable" aria-describedby="help-{{elem.html.inputId}}">
+                                                    <option>-- select --</option>
+                                                    <option ng-repeat="(key, label) in elem.property.choices" value="{{key}}">{{label}}</option>
+                                                </select>
+                                            </div>
+                                            <!-- For option box -->
+                                            <div ng-if="elem.property.options">
+                                                <div ng-if="elem.property.multiField">
+                                                    <label class="checkbox-inline" ng-repeat="(value, label) in elem.property.options">
+                                                        <input type="checkbox" value="{{value}}"> {{label}}
+                                                    </label>
+                                                </div>
+                                                <div ng-if="!elem.property.multiField">
+                                                    <label class="radio-inline" ng-repeat="(value, label) in elem.property.options">
+                                                        <input type="radio" value="{{value}}" name="{{elem.html.inputId}}"> {{label}}
+                                                    </label>
+                                                </div>
+                                            </div>
                                             <span class="fa fa-plus bg-info input-multiple" ng-if="elem.property.multiField"></span>
                                             <small id="help-{{elem.html.inputId}}" class="form-text text-muted">{{elem.property.description}}</small>
                                         </div>
@@ -152,33 +175,244 @@
                                 </li>
                             </ul>
                         </div>
+
                         <!-- For embedded -->
-                        <div ng-if="item.schema" class="item-container">
+                        <div ng-if="item.property.schema" class="item-container" style="border-color:black">
+                            <label>{{item.property.label}}
+                                <span class="fa fa-clone" ng-if="item.property.multiField"></span>
+                            </label>
                             <span class="pull-right m-b-sm">
-                                <button type="button" class="btn btn-default btn-xs" ng-class="{'btn-danger':hovering}" ng-mouseenter="hovering=true" ng-mouseleave="hovering=false">
+                                <button type="button" class="btn btn-default btn-xs" ng-class="{'btn-warning':hovering}" ng-mouseenter="hovering=true" ng-mouseleave="hovering=false"
+                                    ng-click="showPropertyFromObject(item.property)">
+                                    <i class="fa fa-edit"></i>
+                                </button>
+                                <button type="button" ng-click="removeItem(formItems, $index)" class="btn btn-default btn-xs" ng-class="{'btn-danger':hovering}"
+                                    ng-mouseenter="hovering=true" ng-mouseleave="hovering=false">
                                     <i class="fa fa-trash"></i>
                                 </button>
                             </span>
-                            <ul class="list-inline" ui-sortable ng-model="item" data-index="{{item.index = $index}}">
-                                <li ng-repeat="elem in item track by $index" ng-class="{'col-md-6': item.length == 2, 'col-md-4': item.length == 3}">
-                                    <div ondrop="angular.element(this).scope().dropOnLayout(event, this)" data-index="{{ item.index }}" data-position="{{$index}}"
-                                        ondragover="angular.element(this).scope().allowDrop(event,this)" class="dropZone">
-                                        <p class="text-center" ng-if="isEmptyObject(elem)">Just drag and drop fields here</p>
-                                        <div class="form-group bg-white" ng-if="!isEmptyObject(elem)">
-                                            <h4 ng-if="elem.property.header">{{elem.property.header}}</h4>
-                                            <span class="pull-right" ng-mouseenter="hovering=true" ng-mouseleave="hovering=false">
-                                                <button type="button" class="btn btn-default btn-xs" ng-class="{'btn-warning':hovering}" ng-click="showProperty(item.index, $index)">
-                                                    <i class="fa fa-edit"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-default btn-xs" ng-class="{'btn-danger':hovering}">
-                                                    <i class="fa fa-trash"></i>
-                                                </button>
-                                            </span>
-                                            <label for="{{elem.html.inputId}}">{{elem.property.label}}</label>
-                                            <input type="{{elem.html.inputType}}" class="form-control" id="{{elem.html.inputId}}" placeholder="{{elem.property.placeholder}}"
-                                                alt="elem.property.helpText" aria-describedby="help-{{elem.html.inputId}}" />
-                                            <small id="help-{{elem.html.inputId}}" class="form-text text-muted">{{elem.property.description}}</small>
+                            <div class="dropZone" data-index="{{item.index = $index}}" data-position="-1" ondrop="angular.element(this).scope().dropOnEmbedded(event, this)"
+                                ondragover="angular.element(this).scope().allowDrop(event,this)">
+                                <p class="text-center">Just drag and drop fields here</p>
+                            </div>
+                            <ul class="list" ui-sortable ng-model="item.property.schema">
+                                <li ng-repeat="embeddedItem in item.property.schema track by $index">
+                                    <!-- for full-width items -->
+                                    <div class="form-group bg-white" ng-if="!isArray(embeddedItem) && !embeddedItem.property.schema">
+                                        <span class="pull-right">
+                                            <button type="button" class="btn btn-default btn-xs" ng-class="{'btn-warning':hovering}" ng-mouseenter="hovering=true" ng-mouseleave="hovering=false"
+                                                ng-click="showPropertyFromObject(embeddedItem.property)">
+                                                <i class="fa fa-edit"></i>
+                                            </button>
+                                            <button type="button" ng-click="removeItem(item.property.schema, $index)" class="btn btn-default btn-xs" ng-class="{'btn-danger':hovering}"
+                                                ng-mouseenter="hovering=true" ng-mouseleave="hovering=false">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </span>
+                                        <h4 ng-if="embeddedItem.property.header">{{embeddedItem.property.header}}</h4>
+                                        <label for="{{embeddedItem.html.inputId}}">{{embeddedItem.property.label}}</label>
+                                        <input type="{{embeddedItem.html.inputType}}" ng-if="!embeddedItem.property.choices && !embeddedItem.property.options" class="form-control"
+                                            id="{{embeddedItem.html.inputId}}" placeholder="{{embeddedItem.property.placeholder}}"
+                                            aria-describedby="help-{{embeddedItem.html.inputId}}" ng-readonly="!embeddedItem.property.editable"
+                                            data-index="{{embeddedItem.property.index = $index}}" />
+                                        <!-- For select box -->
+                                        <div ng-if="embeddedItem.property.choices">
+                                            <select class="form-control" id="{{embeddedItem.html.inputId}}" ng-readonly="!embeddedItem.property.editable" aria-describedby="help-{{embeddedItem.html.inputId}}">
+                                                <option>-- select --</option>
+                                                <option ng-repeat="(key, label) in embeddedItem.property.choices" value="{{key}}">{{label}}</option>
+                                            </select>
                                         </div>
+                                        <!-- For option box -->
+                                        <div ng-if="embeddedItem.property.options">
+                                            <div ng-if="embeddedItem.property.multiField">
+                                                <label class="checkbox-inline" ng-repeat="(value, label) in embeddedItem.property.options">
+                                                    <input type="checkbox" value="{{value}}"> {{label}}
+                                                </label>
+                                            </div>
+                                            <div ng-if="!embeddedItem.property.multiField">
+                                                <label class="radio-inline" ng-repeat="(value, label) in embeddedItem.property.options">
+                                                    <input type="radio" value="{{value}}" name="{{embeddedItem.html.inputId}}"> {{label}}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <span class="fa fa-plus bg-info input-multiple" ng-if="embeddedItem.property.multiField && !embeddedItem.property.options"></span>
+                                        <small id="help-{{embeddedItem.html.inputId}}" class="form-text text-muted">{{embeddedItem.property.description}}</small>
+                                    </div>
+                                    <!-- For Layouts -->
+                                    <div ng-if="isArray(embeddedItem)" class="item-container">
+                                        <span class="pull-right m-b-sm">
+                                            <button ng-click="removeItem(item.property.schema, $index)" type="button" class="btn btn-default btn-xs" ng-class="{'btn-danger':hovering}"
+                                                ng-mouseenter="hovering=true" ng-mouseleave="hovering=false">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </span>
+                                        <ul class="list-inline" ui-sortable ng-model="embeddedItem" data-index="{{embeddedItem.index = $index}}">
+                                            <li ng-repeat="elem in embeddedItem track by $index" ng-class="{'col-md-6': embeddedItem.length == 2, 'col-md-4': embeddedItem.length == 3}">
+                                                <div ondrop="angular.element(this).scope().dropOnEmbeddedLayout(event, this)" data-index="{{item.index}}" data-layout-index="{{ embeddedItem.index }}"
+                                                    data-position="{{$index}}" ondragover="angular.element(this).scope().allowDrop(event,this)"
+                                                    data-embedded-index="-1" data-cols="{{embeddedItem.length}}" class="dropZone">
+                                                    <p class="text-center" ng-if="isEmptyObject(elem)">Just drag and drop fields here</p>
+                                                    <div class="form-group bg-white" ng-if="!isEmptyObject(elem)">
+                                                        <span class="pull-right" ng-mouseenter="hovering=true" ng-mouseleave="hovering=false">
+                                                            <button type="button" class="btn btn-default btn-xs" ng-class="{'btn-warning':hovering}" ng-click="showPropertyFromObject(elem.property)">
+                                                                <i class="fa fa-edit"></i>
+                                                            </button>
+                                                            <button ng-click="removeItem(embeddedItem, $index)" type="button" class="btn btn-default btn-xs" ng-class="{'btn-danger':hovering}">
+                                                                <i class="fa fa-trash"></i>
+                                                            </button>
+                                                        </span>
+                                                        <h4 ng-if="elem.property.header">{{elem.property.header}}</h4>
+                                                        <label for="{{elem.html.inputId}}">{{elem.property.label}}</label>
+                                                        <input type="{{elem.html.inputType}}" ng-if="!elem.property.choices && !elem.property.options" class="form-control" id="{{elem.html.inputId}}"
+                                                            placeholder="{{elem.property.placeholder}}" alt="elem.property.helpText"
+                                                            aria-describedby="help-{{elem.html.inputId}}" />
+                                                        <!-- For select box -->
+                                                        <div ng-if="elem.property.choices">
+                                                            <select class="form-control" id="{{elem.html.inputId}}" ng-readonly="!elem.property.editable" aria-describedby="help-{{elem.html.inputId}}">
+                                                                <option>-- select --</option>
+                                                                <option ng-repeat="(key, label) in elem.property.choices" value="{{key}}">{{label}}</option>
+                                                            </select>
+                                                        </div>
+                                                        <!-- For option box -->
+                                                        <div ng-if="elem.property.options">
+                                                            <div ng-if="elem.property.multiField">
+                                                                <label class="checkbox-inline" ng-repeat="(value, label) in elem.property.options">
+                                                                    <input type="checkbox" value="{{value}}"> {{label}}
+                                                                </label>
+                                                            </div>
+                                                            <div ng-if="!elem.property.multiField">
+                                                                <label class="radio-inline" ng-repeat="(value, label) in elem.property.options">
+                                                                    <input type="radio" value="{{value}}" name="{{elem.html.inputId}}"> {{label}}
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        <span class="fa fa-plus bg-info input-multiple" ng-if="elem.property.multiField"></span>
+                                                        <small id="help-{{elem.html.inputId}}" class="form-text text-muted">{{elem.property.description}}</small>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <!-- For embedded inside embedded -->
+                                    <div ng-if="embeddedItem.property.schema" class="item-container">
+                                        <label>{{item.property.label}}
+                                            <span class="fa fa-clone" ng-if="embeddedItem.property.multiField"></span>
+                                        </label>
+                                        <span class="pull-right m-b-sm">
+                                            <button type="button" class="btn btn-default btn-xs" ng-class="{'btn-warning':hovering}" ng-mouseenter="hovering=true" ng-mouseleave="hovering=false"
+                                                ng-click="showPropertyFromObject(embeddedItem.property)">
+                                                <i class="fa fa-edit"></i>
+                                            </button>
+                                            <button type="button" ng-click="removeItem(item.property.schema, $index)" class="btn btn-default btn-xs" ng-class="{'btn-danger':hovering}"
+                                                ng-mouseenter="hovering=true" ng-mouseleave="hovering=false">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </span>
+                                        <div class="dropZone" data-position="{{embeddedItem.index = $index}}" data-index="{{item.index}}" ondrop="angular.element(this).scope().dropOnEmbedded(event, this)"
+                                            ondragover="angular.element(this).scope().allowDrop(event,this)">
+                                            <p class="text-center">Just drag and drop fields here</p>
+                                        </div>
+                                        <ul class="list" ui-sortable ng-model="item.property.schema">
+                                            <li ng-repeat="microEmbeddedItem in embeddedItem.property.schema track by $index">
+                                                <!-- for full-width items -->
+                                                <div class="form-group bg-white" ng-if="!isArray(microEmbeddedItem) && !microEmbeddedItem.property.schema">
+                                                    <span class="pull-right">
+                                                        <button type="button" class="btn btn-default btn-xs" ng-class="{'btn-warning':hovering}" ng-mouseenter="hovering=true" ng-mouseleave="hovering=false"
+                                                            ng-click="showPropertyFromObject(microEmbeddedItem.property)">
+                                                            <i class="fa fa-edit"></i>
+                                                        </button>
+                                                        <button type="button" ng-click="removeItem(embeddedItem.property.schema, $index)" class="btn btn-default btn-xs" ng-class="{'btn-danger':hovering}"
+                                                            ng-mouseenter="hovering=true" ng-mouseleave="hovering=false">
+                                                            <i class="fa fa-trash"></i>
+                                                        </button>
+                                                    </span>
+                                                    <h4 ng-if="microEmbeddedItem.property.header">{{microEmbeddedItem.property.header}}</h4>
+                                                    <label for="{{microEmbeddedItem.html.inputId}}">{{microEmbeddedItem.property.label}}</label>
+                                                    <input type="{{microEmbeddedItem.html.inputType}}" ng-if="!microEmbeddedItem.property.choices && !microEmbeddedItem.property.options"
+                                                        class="form-control" id="{{microEmbeddedItem.html.inputId}}" placeholder="{{microEmbeddedItem.property.placeholder}}"
+                                                        aria-describedby="help-{{microEmbeddedItem.html.inputId}}" ng-readonly="!microEmbeddedItem.property.editable"
+                                                        data-index="{{microEmbeddedItem.property.index = $index}}" />
+                                                    <!-- For select box -->
+                                                    <div ng-if="microEmbeddedItem.property.choices">
+                                                        <select class="form-control" id="{{microEmbeddedItem.html.inputId}}" ng-readonly="!microEmbeddedItem.property.editable" aria-describedby="help-{{microEmbeddedItem.html.inputId}}">
+                                                            <option>-- select --</option>
+                                                            <option ng-repeat="(key, label) in microEmbeddedItem.property.choices" value="{{key}}">{{label}}</option>
+                                                        </select>
+                                                    </div>
+                                                    <!-- For option box -->
+                                                    <div ng-if="microEmbeddedItem.property.options">
+                                                        <div ng-if="microEmbeddedItem.property.multiField">
+                                                            <label class="checkbox-inline" ng-repeat="(value, label) in microEmbeddedItem.property.options">
+                                                                <input type="checkbox" value="{{value}}"> {{label}}
+                                                            </label>
+                                                        </div>
+                                                        <div ng-if="!microEmbeddedItem.property.multiField">
+                                                            <label class="radio-inline" ng-repeat="(value, label) in microEmbeddedItem.property.options">
+                                                                <input type="radio" value="{{value}}" name="{{microEmbeddedItem.html.inputId}}"> {{label}}
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                    <span class="fa fa-plus bg-info input-multiple" ng-if="microEmbeddedItem.property.multiField && !microEmbeddedItem.property.options"></span>
+                                                    <small id="help-{{microEmbeddedItem.html.inputId}}" class="form-text text-muted">{{microEmbeddedItem.property.description}}</small>
+                                                </div>
+                                                <!-- For Layouts -->
+                                                <div ng-if="isArray(microEmbeddedItem)" class="item-container">
+                                                    <span class="pull-right m-b-sm">
+                                                        <button type="button" ng-click="removeItem(embeddedItem.property.schema, $index)" class="btn btn-default btn-xs" ng-class="{'btn-danger':hovering}"
+                                                            ng-mouseenter="hovering=true" ng-mouseleave="hovering=false">
+                                                            <i class="fa fa-trash"></i>
+                                                        </button>
+                                                    </span>
+                                                    <ul class="list-inline" ui-sortable ng-model="microEmbeddedItem" data-index="{{microEmbeddedItem.index = $index}}">
+                                                        <li ng-repeat="elem in microEmbeddedItem track by $index" ng-class="{'col-md-6': microEmbeddedItem.length == 2, 'col-md-4': microEmbeddedItem.length == 3}">
+                                                            <div ondrop="angular.element(this).scope().dropOnEmbeddedLayout(event, this)" data-index="{{item.index}}" data-layout-index="{{ microEmbeddedItem.index }}"
+                                                                data-position="{{$index}}" ondragover="angular.element(this).scope().allowDrop(event,this)"
+                                                                data-embedded-index="{{embeddedItem.index}}" data-cols="{{microEmbeddedItem.length}}"
+                                                                class="dropZone">
+                                                                <p class="text-center" ng-if="isEmptyObject(elem)">Just drag and drop fields here</p>
+                                                                <div class="form-group bg-white" ng-if="!isEmptyObject(elem)">
+                                                                    <span class="pull-right" ng-mouseenter="hovering=true" ng-mouseleave="hovering=false">
+                                                                        <button type="button" class="btn btn-default btn-xs" ng-class="{'btn-warning':hovering}" ng-click="showPropertyFromObject(elem.property)">
+                                                                            <i class="fa fa-edit"></i>
+                                                                        </button>
+                                                                        <button type="button" ng-click="removeItem(microEmbeddedItem, $index)" class="btn btn-default btn-xs" ng-class="{'btn-danger':hovering}">
+                                                                            <i class="fa fa-trash"></i>
+                                                                        </button>
+                                                                    </span>
+                                                                    <h4 ng-if="elem.property.header">{{elem.property.header}}</h4>
+                                                                    <label for="{{elem.html.inputId}}">{{elem.property.label}}</label>
+                                                                    <input type="{{elem.html.inputType}}" ng-if="!elem.property.choices && !elem.property.options" class="form-control" id="{{elem.html.inputId}}"
+                                                                        placeholder="{{elem.property.placeholder}}" alt="elem.property.helpText"
+                                                                        aria-describedby="help-{{elem.html.inputId}}" />
+                                                                    <!-- For select box -->
+                                                                    <div ng-if="elem.property.choices">
+                                                                        <select class="form-control" id="{{elem.html.inputId}}" ng-readonly="!elem.property.editable" aria-describedby="help-{{elem.html.inputId}}">
+                                                                            <option>-- select --</option>
+                                                                            <option ng-repeat="(key, label) in elem.property.choices" value="{{key}}">{{label}}</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <!-- For option box -->
+                                                                    <div ng-if="elem.property.options">
+                                                                        <div ng-if="elem.property.multiField">
+                                                                            <label class="checkbox-inline" ng-repeat="(value, label) in elem.property.options">
+                                                                                <input type="checkbox" value="{{value}}"> {{label}}
+                                                                            </label>
+                                                                        </div>
+                                                                        <div ng-if="!elem.property.multiField">
+                                                                            <label class="radio-inline" ng-repeat="(value, label) in elem.property.options">
+                                                                                <input type="radio" value="{{value}}" name="{{elem.html.inputId}}"> {{label}}
+                                                                            </label>
+                                                                        </div>
+                                                                    </div>
+                                                                    <span class="fa fa-plus bg-info input-multiple" ng-if="elem.property.multiField"></span>
+                                                                    <small id="help-{{elem.html.inputId}}" class="form-text text-muted">{{elem.property.description}}</small>
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </li>
+                                        </ul>
                                     </div>
                                 </li>
                             </ul>
@@ -216,7 +450,7 @@
                                 </div>
                             </div>
 
-                            <div ng-if="isObject(val)">
+                            <div ng-if="isObject(val) && !isArray(val)">
                                 <label class="text-capitalize">{{key}}: </label>
                                 <table ng-if="!isEmptyObject(val)" class="table table-striped table-bordered table-hover table-condensed" style="font-size: 12px;">
                                     <thead>
@@ -245,12 +479,6 @@
                                         </button> -->
                                 </div>
                             </div>
-                            <!-- <div class="input-group" ng-if="isString(val)">
-                                <span class="input-group-btn">
-                                    <button class="btn btn-default" type="button">{{key}}</button>
-                                </span>
-                                <input type="text" class="form-control" value="{{val}}" ng-model="formItemProperty[key]" placeholder="{{key}}">
-                            </div> -->
                         </li>
                     </ul>
                     <button ng-if="formItemProperty" type="button" class="btn btn-default" ng-click="applyChangedProperty(currentIndex)">

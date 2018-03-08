@@ -1,4 +1,4 @@
-(function() {
+(function () {
     "use strict";
 
     angular
@@ -33,8 +33,8 @@
             });
 
             modalInstance.result.then(
-                function() {},
-                function() {
+                function () {},
+                function () {
                     $log.info("Modal dismissed at: " + new Date());
                 }
             );
@@ -49,11 +49,11 @@
         $scope.countId = 0;
         $scope.mapEntry = [];
         // Drag and drop
-        $scope.allowDrop = function(ev, obj) {
+        $scope.allowDrop = function (ev, obj) {
             ev.preventDefault();
         };
 
-        $scope.drag = function(ev, obj) {
+        $scope.drag = function (ev, obj) {
             let fieldType = obj.getAttribute("data-type");
             ev.dataTransfer.setData("type", fieldType);
             if (fieldType == "layout")
@@ -62,7 +62,7 @@
             ev.dataTransfer.dropEffect = "copy";
         };
 
-        $scope.drop = function(ev, obj) {
+        $scope.drop = function (ev, obj) {
             ev.preventDefault();
             var itemType = ev.dataTransfer.getData("type");
             if (itemType == "layout") {
@@ -74,22 +74,13 @@
         };
 
         function addTextItemToForm(type, arrIndex, position, cols) {
-            let item = {};
-            let itemProp = $scope.itemProperties[type];
-            let propJSON = JSON.parse(itemProp);
-            let itemId = type + $scope.countId;
-            let inputType = getInputTypeFromType(type);
-            propJSON.id = itemId;
-            item.html = {};
-            item.html.inputType = inputType;
-            item.html.inputId = itemId;
-            item.property = propJSON;
-            if(cols) {
-                let col = 12/cols;
+            let item = prepareItemBasedOnType(type);
+            if (cols) {
+                let col = 12 / cols;
                 item.property.columns = col;
             }
-            $scope.$apply(function() {
-                if(arrIndex && position)
+            $scope.$apply(function () {
+                if (arrIndex && position)
                     $scope.formItems[arrIndex][position] = item;
                 else
                     $scope.formItems.push(item);
@@ -99,19 +90,15 @@
             $scope.countId++;
         }
 
-        function addLayoutToForm(col) {
-            let item = [];
-            item["index"] = 0;
-            for (var i = 0; i < col; i++) {
-                item.push({});
-            }
-            $scope.$apply(function() {
+        function addLayoutToForm(cols) {
+            let item = prepareItemBasedOnType("layout", cols);
+            $scope.$apply(function () {
                 $scope.formItems.push(item);
             });
             console.log($scope.formItems);
         }
 
-        $scope.dropOnLayout = function(ev, elem) {
+        $scope.dropOnLayout = function (ev, elem) {
             ev.preventDefault();
             var itemType = ev.dataTransfer.getData("type");
             var arrIndex = elem.getAttribute("data-index");
@@ -120,7 +107,80 @@
             addTextItemToForm(itemType, arrIndex, currentPosition, cols);
         }
 
-        var getInputTypeFromType = function(type) {
+        $scope.dropOnEmbeddedLayout = function (ev, elem) {
+            ev.preventDefault();
+            var itemType = ev.dataTransfer.getData("type");
+            var arrIndex = elem.getAttribute("data-index");
+            var currentPosition = elem.getAttribute("data-position");
+            var layoutIndex = elem.getAttribute("data-layout-index");
+            var embeddedIndex = elem.getAttribute("data-embedded-index");
+            var cols = elem.getAttribute("data-cols");
+
+            let item = prepareItemBasedOnType(itemType);
+
+            $scope.$apply(function () {
+                if (embeddedIndex >= 0)
+                    $scope.formItems[arrIndex].property.schema[embeddedIndex].property.schema[layoutIndex][currentPosition] = item;
+                else
+                    $scope.formItems[arrIndex].property.schema[layoutIndex][currentPosition] = item;
+            });
+            $scope.countId++;
+        }
+
+        $scope.dropOnEmbedded = function (ev, elem) {
+            var arrIndex = elem.getAttribute("data-index");
+            var currentPosition = elem.getAttribute("data-position");
+            var itemType = ev.dataTransfer.getData("type");
+            var cols = ev.dataTransfer.getData("col");
+            var item = prepareItemBasedOnType(itemType, cols);
+            $scope.$apply(function () {
+                if (currentPosition >= 0)
+                    $scope.formItems[arrIndex].property.schema[currentPosition].property.schema.push(item);
+                else
+                    $scope.formItems[arrIndex].property.schema.push(item);
+            });
+            $scope.countId++;
+        }
+
+        $scope.removeItem = function (array, rmIndex) {
+            Array.prototype.remove = function (from, to) {
+                var rest = this.slice((to || from) + 1 || this.length);
+                this.length = from < 0 ? this.length + from : from;
+                return this.push.apply(this, rest);
+            };
+            array.remove(rmIndex);
+            console.log(array);
+        }
+
+        var removeItemFromArr = function () {
+            // Array Remove - By John Resig (MIT Licensed)
+        }
+
+        var prepareItemBasedOnType = function (itemType, cols) {
+            let item;
+            if (itemType === "layout") {
+                item = [];
+                item["index"] = 0;
+                for (var i = 0; i < cols; i++) {
+                    item.push({});
+                }
+            } else {
+                item = {};
+                let itemProp = $scope.itemProperties[itemType];
+                let propJSON = JSON.parse(itemProp);
+                let itemId = itemType + $scope.countId;
+                let inputType = getInputTypeFromType(itemType);
+                propJSON.id = itemId;
+                item.html = {};
+                item.html.inputType = inputType;
+                item.html.inputId = itemId;
+                item.property = propJSON;
+            }
+
+            return item;
+        }
+
+        var getInputTypeFromType = function (type) {
             let inpTyp = "text";
 
             if (type == "file") inpTyp = "file";
@@ -129,15 +189,19 @@
             return inpTyp;
         };
 
-        $scope.showProperty = function(index, position) {
-            let currentProperty = position >=0 ? $scope.formItems[index][position].property : $scope.formItems[index].property;
+        $scope.showProperty = function (index, position) {
+            let currentProperty = position >= 0 ? $scope.formItems[index][position].property : $scope.formItems[index].property;
             $scope.formItemProperty = currentProperty;
         };
 
-        $scope.booleanPropertyChanged = function(key) {
-            if(key == "multiField"){
+        $scope.showPropertyFromObject = function (propObject) {
+            $scope.formItemProperty = propObject;
+        };
+
+        $scope.booleanPropertyChanged = function (key) {
+            if (key == "multiField") {
                 let currentType = $scope.formItemProperty.type;
-                if($scope.formItemProperty.multiField) {
+                if ($scope.formItemProperty.multiField) {
                     $scope.formItemProperty.type = $scope.multiValueTypes[currentType];
                 } else {
                     $scope.formItemProperty.type = findKeyFromVal(currentType);
@@ -145,13 +209,13 @@
             }
         }
 
-        $scope.addItemToOptions = function(elem) {
+        $scope.addItemToOptions = function (elem) {
             elem[$scope.mapEntry.key] = $scope.mapEntry.label;
             $scope.mapEntry.key = "";
             $scope.mapEntry.label = "";
         }
 
-        $scope.applyChangedProperty = function(index) {
+        $scope.applyChangedProperty = function (index) {
             console.log($scope.formItemProperty);
         };
 
@@ -182,7 +246,7 @@
                 editable: true,
                 index: 0
             };
-            String.prototype.insert = function(position, text) {
+            String.prototype.insert = function (position, text) {
                 return this.slice(0, position) + text + this.slice(position);
             };
             var defaultPropertyAsStr = JSON.stringify(defaultPropertyAsJSON);
@@ -213,7 +277,7 @@
                 ',"type": "email"'
             );
             properties["embedded"] =
-                '{"type": "embedded", "label": "embedded", "multiField": false,"schema": []';
+                '{"id": "", "type": "embedded", "label": "Embedded", "multiField": false, "index": 0,"schema": [] }';
             properties["file"] = defaultPropertyAsStr.insert(
                 insertPos,
                 ',"type": "file", "multiField": false, "mime": "", "maxFileSize":""'
@@ -264,9 +328,8 @@
 
         function findKeyFromVal(typeValue) {
             let typeKey = "";
-            for(var key in $scope.multiValueTypes){
-                if($scope.multiValueTypes[key] == typeValue)
-                {
+            for (var key in $scope.multiValueTypes) {
+                if ($scope.multiValueTypes[key] == typeValue) {
                     typeKey = key;
                     break;
                 }
@@ -274,51 +337,51 @@
             return typeKey;
         }
 
-        $scope.getLabelForKey = function(key) {
+        $scope.getLabelForKey = function (key) {
             let label = key;
-            if(key == "multiField")
+            if (key == "multiField")
                 label = "Allow Multiple"
             return label;
         }
 
-        $scope.isString = function(item) {
+        $scope.isString = function (item) {
             return angular.isString(item);
         };
 
-        $scope.isNumber = function(item) {
+        $scope.isNumber = function (item) {
             return angular.isNumber(item);
         };
 
-        $scope.isArray = function(item) {
+        $scope.isArray = function (item) {
             return angular.isArray(item);
         };
 
-        $scope.isBoolean = function(item) {
+        $scope.isBoolean = function (item) {
             return typeof item == "boolean";
         };
 
-        $scope.isEmptyObject = function(item) {
+        $scope.isEmptyObject = function (item) {
             return angular.equals(item, {});
         };
 
-        $scope.isObject = function(item) {
+        $scope.isObject = function (item) {
             return angular.isObject(item);
         };
 
-        $scope.getNumber = function(num) {
+        $scope.getNumber = function (num) {
             console.log(num);
             return new Array(Number(num));
         };
 
-        $scope.viewableProperty = function(val) {
+        $scope.viewableProperty = function (val) {
             return "index" != val;
         };
 
-        $scope.checkReadonlyProperty = function(key, val) {
+        $scope.checkReadonlyProperty = function (key, val) {
             return key == "type" || (key == "columns" && val == 12);
         };
 
-        $scope.ok = function() {
+        $scope.ok = function () {
             console.log("ok");
         };
     }
