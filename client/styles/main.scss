@@ -16,6 +16,20 @@ ul {
     padding-left: 0px;
 }
 
+label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+    font-size: 12px;
+}
+
+.col-md-4 {
+    label {
+        max-width: 80px;
+    }
+}
+
 .input-fields {
     li {
         background: #fff;
@@ -81,7 +95,7 @@ span.input-multiple {
         margin-top: 2px;
         cursor: move;
         border: 1px dashed #ccc;
-        padding: 20px;
+        padding: 18px;
     }
     div.dropZone {
         min-height:20px; 
@@ -119,6 +133,9 @@ span.input-multiple {
 }
 .pull-right {
     float: right !important;
+}
+.p-l-n {
+    padding-left: 0 !important;
 }
 .p-xxs {
     padding: 5px !important;

@@ -1,4 +1,4 @@
-(function () {
+(function() {
     "use strict";
 
     angular
@@ -13,47 +13,126 @@
         .controller("FormBuilderCtrl", [
             "$scope",
             "$uibModalInstance",
-            "$log",
             FormBuilderCtrl
         ]);
 
     function AppCtrl($scope, $state, $uibModal, $log) {
-        $scope.openFormBuilder = openFormBuilder;
+        $scope.multiFieldTypes = ["choices", "durations", "embedded_list", "files", "links", "text_list", "options"];
 
-        function openFormBuilder(inputJson) {
+        $scope.openFormBuilder = function(inputJson) {
+            $scope.formattedJson = inputJson ? formatInputJson(inputJson) : null;
+
             var modalInstance = $uibModal.open({
                 animation: true,
                 templateUrl: "formBuilderTemplate.html",
                 controller: "FormBuilderCtrl",
-                controllerAs: "FrmCtrl",
                 size: "lg",
                 resolve: {
-                    inputJson: inputJson
+                    inputJSON: function() {
+                        console.log($scope.formattedJson);
+                        return $scope.formattedJson; // pass input to Dialog
+                    }
                 }
             });
 
             modalInstance.result.then(
-                function () {},
-                function () {
+                function() {},
+                function() {
                     $log.info("Modal dismissed at: " + new Date());
                 }
             );
+        };
+
+        function formatInputJson(inputJson) {
+            let arrayJson = [];
+            inputJson = JSON.parse(inputJson);
+            for(var item in inputJson) {
+                let elem = {};
+                if(inputJson[item].schema){
+                    elem.property = inputJson[item];
+                    elem.property.id = item;
+                    elem.property.multiField = elem.property.multiField ? elem.property.multiField : checkMutifieldFromType(elem.property.type);
+                    elem.property.label = angular.isUndefined(elem.property.label) ? "" : elem.property.label;
+                    elem.property.schema = prepareSchemaArr(elem.property.schema);
+                } else if(inputJson[item].type == "layout"){
+                    elem = prepareSchemaArr(inputJson[item].elements);
+                    elem = elem[0];
+                    elem.id = item;
+                    elem.type = "layout";
+                } else {
+                    elem.property = inputJson[item];
+                    elem.property.id = item;
+                    elem.property.multiField = elem.property.multiField ? elem.property.multiField : checkMutifieldFromType(elem.property.type);
+                    elem.property.editable = angular.isUndefined(elem.property.editable) ? true : elem.property.editable;
+                    elem.html = {};
+                    elem.html.inputType = getInputTypeFromType(elem.property.type);
+                    elem.html.inputId = item;
+                }
+                arrayJson.push(elem);
+            }
+            return arrayJson;
+        }
+
+        var prepareSchemaArr = function(inputSchema){
+            let schemaArr = [];
+            let sameRowItems = [];
+            let columnCount = 0;
+            for(var item in inputSchema){
+                let elem = {};
+                if (inputSchema[item].schema) {
+                    elem.property = inputSchema[item];
+                    elem.property.id = item;
+                    elem.property.multiField = elem.property.multiField ? elem.property.multiField : checkMutifieldFromType(elem.property.type);
+                    elem.property.schema = prepareSchemaArr(elem.property.schema);
+                } else if (inputSchema[item].type == "layout") {
+                    elem = prepareSchemaArr(inputSchema[item].elements);
+                    elem = elem[0];
+                    elem.id = item;
+                    elem.type = "layout";
+                } else {
+                    elem.property = inputSchema[item];
+                    elem.property.id = item;
+                    elem.property.multiField = elem.property.multiField ? elem.property.multiField : checkMutifieldFromType(elem.property.type);
+                    elem.property.editable = angular.isUndefined(elem.property.editable) ? true : elem.property.editable;
+                    elem.html = {};
+                    elem.html.inputType = getInputTypeFromType(elem.property.type);
+                    elem.html.inputId = item;
+                    
+                    if (elem.property.columns && elem.property.columns != 12) {
+                        sameRowItems.push(elem);
+                        columnCount += elem.property.columns;
+                    }
+                }
+
+                if(!columnCount) {
+                    schemaArr.push(elem);
+                } else if(columnCount == 12) {
+                    schemaArr.push(sameRowItems);
+                    sameRowItems = [];
+                    columnCount = 0;
+                }
+            }
+            return schemaArr;
+        }
+
+        var checkMutifieldFromType = function(type) {
+            return $scope.multiFieldTypes.indexOf(type) > -1;
         }
     }
 
-    function FormBuilderCtrl($scope, $uibModalInstance, $log, model) {
-        $scope.formItems = [];
-        //$scope.formItemProperty = {};
+    function FormBuilderCtrl($scope, $uibModalInstance) {
+        $scope.formItems = $scope.$resolve.inputJSON ? $scope.$resolve.inputJSON : [];
+        $scope.showOutputModal = false;
         $scope.multiValueTypes = prepareTypeNamesForMultiValues();
         $scope.itemProperties = prepareElemTypeProperties();
         $scope.countId = 0;
         $scope.mapEntry = [];
         // Drag and drop
-        $scope.allowDrop = function (ev, obj) {
+        $scope.allowDrop = function(ev, obj) {
             ev.preventDefault();
         };
 
-        $scope.drag = function (ev, obj) {
+        $scope.drag = function(ev, obj) {
             let fieldType = obj.getAttribute("data-type");
             ev.dataTransfer.setData("type", fieldType);
             if (fieldType == "layout")
@@ -62,7 +141,7 @@
             ev.dataTransfer.dropEffect = "copy";
         };
 
-        $scope.drop = function (ev, obj) {
+        $scope.drop = function(ev, obj) {
             ev.preventDefault();
             var itemType = ev.dataTransfer.getData("type");
             if (itemType == "layout") {
@@ -79,37 +158,35 @@
                 let col = 12 / cols;
                 item.property.columns = col;
             }
-            $scope.$apply(function () {
+            $scope.$apply(function() {
                 if (arrIndex && position)
                     $scope.formItems[arrIndex][position] = item;
-                else
-                    $scope.formItems.push(item);
+                else $scope.formItems.push(item);
             });
-
-            $scope.$digest();
-            $scope.countId++;
         }
 
         function addLayoutToForm(cols) {
             let item = prepareItemBasedOnType("layout", cols);
-            $scope.$apply(function () {
+            $scope.$apply(function() {
                 $scope.formItems.push(item);
             });
             console.log($scope.formItems);
         }
 
-        $scope.dropOnLayout = function (ev, elem) {
+        $scope.dropOnLayout = function(ev, elem) {
             ev.preventDefault();
             var itemType = ev.dataTransfer.getData("type");
+            if(itemType == "embedded") return;
             var arrIndex = elem.getAttribute("data-index");
             var currentPosition = elem.getAttribute("data-position");
             var cols = elem.getAttribute("data-cols");
             addTextItemToForm(itemType, arrIndex, currentPosition, cols);
-        }
+        };
 
-        $scope.dropOnEmbeddedLayout = function (ev, elem) {
+        $scope.dropOnEmbeddedLayout = function(ev, elem) {
             ev.preventDefault();
             var itemType = ev.dataTransfer.getData("type");
+            if(itemType == "embedded") return;
             var arrIndex = elem.getAttribute("data-index");
             var currentPosition = elem.getAttribute("data-position");
             var layoutIndex = elem.getAttribute("data-layout-index");
@@ -117,50 +194,52 @@
             var cols = elem.getAttribute("data-cols");
 
             let item = prepareItemBasedOnType(itemType);
+            item.property.columns = 12 / Number(cols);
 
-            $scope.$apply(function () {
+            $scope.$apply(function() {
                 if (embeddedIndex >= 0)
-                    $scope.formItems[arrIndex].property.schema[embeddedIndex].property.schema[layoutIndex][currentPosition] = item;
+                    $scope.formItems[arrIndex].property.schema[
+                        embeddedIndex
+                    ].property.schema[layoutIndex][currentPosition] = item;
                 else
-                    $scope.formItems[arrIndex].property.schema[layoutIndex][currentPosition] = item;
+                    $scope.formItems[arrIndex].property.schema[layoutIndex][
+                        currentPosition
+                    ] = item;
             });
-            $scope.countId++;
-        }
+        };
 
-        $scope.dropOnEmbedded = function (ev, elem) {
+        $scope.dropOnEmbedded = function(ev, elem) {
             var arrIndex = elem.getAttribute("data-index");
             var currentPosition = elem.getAttribute("data-position");
             var itemType = ev.dataTransfer.getData("type");
             var cols = ev.dataTransfer.getData("col");
             var item = prepareItemBasedOnType(itemType, cols);
-            $scope.$apply(function () {
+            $scope.$apply(function() {
                 if (currentPosition >= 0)
                     $scope.formItems[arrIndex].property.schema[currentPosition].property.schema.push(item);
-                else
+                else 
                     $scope.formItems[arrIndex].property.schema.push(item);
             });
-            $scope.countId++;
-        }
+            console.log($scope.formItems[arrIndex].property);
+        };
 
-        $scope.removeItem = function (array, rmIndex) {
-            Array.prototype.remove = function (from, to) {
+        $scope.removeItem = function(array, rmIndex) {
+            Array.prototype.remove = function(from, to) {
                 var rest = this.slice((to || from) + 1 || this.length);
                 this.length = from < 0 ? this.length + from : from;
                 return this.push.apply(this, rest);
             };
             array.remove(rmIndex);
             console.log(array);
-        }
+        };
 
-        var removeItemFromArr = function () {
-            // Array Remove - By John Resig (MIT Licensed)
-        }
-
-        var prepareItemBasedOnType = function (itemType, cols) {
+        var prepareItemBasedOnType = function(itemType, cols) {
             let item;
             if (itemType === "layout") {
                 item = [];
                 item["index"] = 0;
+                item["type"] = "layout";
+                item["id"] = "layout" + $scope.countId;
                 for (var i = 0; i < cols; i++) {
                     item.push({});
                 }
@@ -176,47 +255,53 @@
                 item.html.inputId = itemId;
                 item.property = propJSON;
             }
-
+            $scope.countId++;
             return item;
-        }
-
-        var getInputTypeFromType = function (type) {
-            let inpTyp = "text";
-
-            if (type == "file") inpTyp = "file";
-            else if (type == "email") inpTyp = "email";
-
-            return inpTyp;
         };
 
-        $scope.showProperty = function (index, position) {
-            let currentProperty = position >= 0 ? $scope.formItems[index][position].property : $scope.formItems[index].property;
+        $scope.showProperty = function(index, position) {
+            let currentProperty =
+                position >= 0
+                    ? $scope.formItems[index][position].property
+                    : $scope.formItems[index].property;
             $scope.formItemProperty = currentProperty;
         };
 
-        $scope.showPropertyFromObject = function (propObject) {
+        $scope.showPropertyFromObject = function(propObject) {
             $scope.formItemProperty = propObject;
         };
 
-        $scope.booleanPropertyChanged = function (key) {
+        $scope.booleanPropertyChanged = function(key) {
             if (key == "multiField") {
                 let currentType = $scope.formItemProperty.type;
                 if ($scope.formItemProperty.multiField) {
-                    $scope.formItemProperty.type = $scope.multiValueTypes[currentType];
+                    $scope.formItemProperty.type =
+                        $scope.multiValueTypes[currentType];
                 } else {
                     $scope.formItemProperty.type = findKeyFromVal(currentType);
                 }
             }
-        }
+        };
 
-        $scope.addItemToOptions = function (elem) {
+        $scope.addItemToOptions = function(elem) {
             elem[$scope.mapEntry.key] = $scope.mapEntry.label;
             $scope.mapEntry.key = "";
             $scope.mapEntry.label = "";
-        }
+        };
 
-        $scope.applyChangedProperty = function (index) {
+        $scope.applyChangedProperty = function(index) {
             console.log($scope.formItemProperty);
+        };
+
+        $scope.columnExceed = function(row) {
+            let totalLength = 0;
+            for (var i = 0; i < row.length; i++) {
+                let elem = row[i];
+                if (elem.property && elem.property.columns)
+                    totalLength += Number(elem.property.columns);
+            }
+
+            return totalLength > 12;
         };
 
         function prepareTypeNamesForMultiValues() {
@@ -246,7 +331,7 @@
                 editable: true,
                 index: 0
             };
-            String.prototype.insert = function (position, text) {
+            String.prototype.insert = function(position, text) {
                 return this.slice(0, position) + text + this.slice(position);
             };
             var defaultPropertyAsStr = JSON.stringify(defaultPropertyAsJSON);
@@ -337,52 +422,114 @@
             return typeKey;
         }
 
-        $scope.getLabelForKey = function (key) {
+        $scope.getLabelForKey = function(key) {
             let label = key;
-            if (key == "multiField")
-                label = "Allow Multiple"
+            if (key == "multiField") label = "Allow Multiple";
             return label;
-        }
+        };
 
-        $scope.isString = function (item) {
+        $scope.isString = function(item) {
             return angular.isString(item);
         };
 
-        $scope.isNumber = function (item) {
+        $scope.isNumber = function(item) {
             return angular.isNumber(item);
         };
 
-        $scope.isArray = function (item) {
+        $scope.isArray = function(item) {
             return angular.isArray(item);
         };
 
-        $scope.isBoolean = function (item) {
+        $scope.isBoolean = function(item) {
             return typeof item == "boolean";
         };
 
-        $scope.isEmptyObject = function (item) {
+        $scope.isEmptyObject = function(item) {
             return angular.equals(item, {});
         };
 
-        $scope.isObject = function (item) {
+        $scope.isObject = function(item) {
             return angular.isObject(item);
         };
 
-        $scope.getNumber = function (num) {
+        $scope.getNumber = function(num) {
             console.log(num);
             return new Array(Number(num));
         };
 
-        $scope.viewableProperty = function (val) {
+        $scope.viewableProperty = function(val) {
             return "index" != val;
         };
 
-        $scope.checkReadonlyProperty = function (key, val) {
+        $scope.checkReadonlyProperty = function(key, val) {
             return key == "type" || (key == "columns" && val == 12);
         };
 
-        $scope.ok = function () {
-            console.log("ok");
+        $scope.exportToJSON = function() {
+            $scope.showOutputModal = true;
+            var outputJSON = {};
+            for(var i = 0; i < $scope.formItems.length; i++){
+                var item = $scope.formItems[i];
+                var id = item.property ? item.property.id : item.id;
+                // outputJSON[id] = item.property;
+                if(item.type == "layout"){
+                    var layoutJSON = {};
+                    layoutJSON["type"] = item.type;
+                    layoutJSON["elements"] = {};
+                    for(var j = 0; j < item.length; j++){
+                        var layoutItem = item[j];
+                        var layoutId = layoutItem.property.id;
+                        layoutJSON.elements[layoutId] = layoutItem.property;
+                    }
+                    outputJSON[id] = layoutJSON;
+                } else if(item.property.schema) {
+                    outputJSON[id] = item.property;
+                    outputJSON[id].schema = processEmbeddedItem(outputJSON[id].schema);
+                } else {
+                    outputJSON[id] = item.property;
+                }
+            }
+            console.log(outputJSON);
+            $scope.jsonOutput = JSON.stringify(outputJSON);
+        };
+
+        var processEmbeddedItem = function(schemaArr) {
+            let schemaJson = {};
+            for(var i = 0; i < schemaArr.length; i++){
+                var item = schemaArr[i];
+                var id = item.property ? item.property.id : item.id;
+                if(item.type == "layout"){
+                    var layoutJSON = {};
+                    layoutJSON["type"] = item.type;
+                    layoutJSON["elements"] = {};
+                    for(var j = 0; j < item.length; j++){
+                        var layoutItem = item[j];
+                        var layoutId = layoutItem.property.id;
+                        layoutJSON.elements[layoutId] = layoutItem.property;
+                    }
+                    schemaJson[id] = layoutJSON;
+                } else if(item.property.schema) {
+                    schemaJson[id] = item.property;
+                    schemaJson[id].schema = processEmbeddedItem(schemaJson[id].schema);
+                } else {
+                    schemaJson[id] = item.property;
+                }
+            }
+            return schemaJson;
+        }
+
+        $scope.cancel = function() {
+            $uibModalInstance.dismiss("dismiss");
         };
     }
+
+    var getInputTypeFromType = function(type) {
+        let inpTyp = "text";
+
+        if (type == "file") inpTyp = "file";
+        else if (type == "email") inpTyp = "email";
+        else if (type == "number") inpTyp = "number";
+
+        return inpTyp;
+    };
 })();

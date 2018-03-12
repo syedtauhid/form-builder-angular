@@ -10,11 +10,11 @@
 <!-- Form builder Modal template -->
 <script type="text/ng-template" id="formBuilderTemplate.html">
     <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <button type="button" class="close" ng-click="cancel()" data-dismiss="modal">&times;</button>
         <h4 class="modal-title" id="modal-title" data-toggle="tooltip" data-placement="top" title="Hooray!">Drag and Drop form builder</h4>
     </div>
     <div class="modal-body" id="modal-body">
-        <div class="row">
+        <div class="row" ng-if="!showOutputModal">
             <div class="col-md-2 input-fields">
                 <ul>
                     <li data-type="address" draggable="true" ondragstart=" angular.element(this).scope().drag(event, this)">
@@ -73,7 +73,7 @@
                     </li>
                 </ul>
             </div>
-            <div class="col-md-7">
+            <div class="col-md-7 p-l-n">
                 <div class="upload-drop-zone" ondrop="angular.element(this).scope().drop(event)" ondragover="angular.element(this).scope().allowDrop(event,this)">
                     Just drag and drop fields or layouts here
                 </div>
@@ -122,6 +122,10 @@
                         </div>
                         <!-- For Layouts -->
                         <div ng-if="isArray(item)" class="item-container">
+                            <span class="pull-left" ng-if="columnExceed(item)">
+                                <p class="text-warning">
+                                    <i class="fa fa-exclamation-triangle"></i> Column sum exceed 12</p>
+                            </span>
                             <span class="pull-right m-b-sm">
                                 <button type="button" ng-click="removeItem(formItems, $index)" class="btn btn-default btn-xs" ng-class="{'btn-danger':hovering}"
                                     ng-mouseenter="hovering=true" ng-mouseleave="hovering=false">
@@ -240,6 +244,10 @@
                                     </div>
                                     <!-- For Layouts -->
                                     <div ng-if="isArray(embeddedItem)" class="item-container">
+                                        <span class="pull-left" ng-if="columnExceed(embeddedItem)">
+                                            <p class="text-warning">
+                                                <i class="fa fa-exclamation-triangle"></i> Column sum exceed 12</p>
+                                        </span>
                                         <span class="pull-right m-b-sm">
                                             <button ng-click="removeItem(item.property.schema, $index)" type="button" class="btn btn-default btn-xs" ng-class="{'btn-danger':hovering}"
                                                 ng-mouseenter="hovering=true" ng-mouseleave="hovering=false">
@@ -294,8 +302,8 @@
                                         </ul>
                                     </div>
                                     <!-- For embedded inside embedded -->
-                                    <div ng-if="embeddedItem.property.schema" class="item-container">
-                                        <label>{{item.property.label}}
+                                    <div ng-if="embeddedItem.property.schema" class="item-container" style="border-color:black">
+                                        <label>{{embeddedItem.property.label}}
                                             <span class="fa fa-clone" ng-if="embeddedItem.property.multiField"></span>
                                         </label>
                                         <span class="pull-right m-b-sm">
@@ -357,6 +365,10 @@
                                                 </div>
                                                 <!-- For Layouts -->
                                                 <div ng-if="isArray(microEmbeddedItem)" class="item-container">
+                                                    <span class="pull-left" ng-if="columnExceed(microEmbeddedItem)">
+                                                        <p class="text-warning">
+                                                            <i class="fa fa-exclamation-triangle"></i> Column sum exceed 12</p>
+                                                    </span>
                                                     <span class="pull-right m-b-sm">
                                                         <button type="button" ng-click="removeItem(embeddedItem.property.schema, $index)" class="btn btn-default btn-xs" ng-class="{'btn-danger':hovering}"
                                                             ng-mouseenter="hovering=true" ng-mouseleave="hovering=false">
@@ -488,9 +500,16 @@
             </div>
 
         </div>
+        <div class="form-group" ng-if="showOutputModal">
+            <label for="jsonInput">Output JSON data:</label>
+            <textarea class="form-control" rows="10" id="jsonInput" ng-model='jsonOutput' readonly></textarea>
+        </div>
     </div>
-    <div class="modal-footer">
-        <button class="btn btn-primary" type="button" ng-click="ok()">Export as JSON</button>
+    <div class="modal-footer" ng-if="!showOutputModal">
+        <button class="btn btn-primary" type="button" ng-click="exportToJSON()">Export as JSON</button>
         <button class="btn btn-default" type="button" ng-click="cancel()">Cancel</button>
+    </div>
+    <div class="modal-footer" ng-if="showOutputModal">
+        <button class="btn btn-default" type="button" ng-click="cancel()">Close</button>
     </div>
 </script>
